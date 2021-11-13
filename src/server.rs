@@ -10,16 +10,12 @@ use {
     }
 };
 
-const INITIAL_THREADS: usize = 10;
-const MAXIMUM_THREADS: usize = 400;
-
 /// Starts a new Vial server. Should always be invoked via the
 /// [`vial::run!()`](macro.run.html) macro, since there is some setup
 /// that needs to happen.
 #[doc(hidden)]
 pub fn run<T: ToSocketAddrs>(addr: T, router: Router, banner: Option<&str>) -> Result<()> {
-    // let mut pool = ThreadPool::new(INITIAL_THREADS);
-    let mut pool = threadfin::builder().size(8).build();
+    let pool = threadfin::builder().size(8).build();
     let listener = TcpListener::bind(&addr)?;
     let addr = listener.local_addr()?;
     let server = Arc::new(Server::new(router));
