@@ -15,7 +15,8 @@ use {
 /// that needs to happen.
 #[doc(hidden)]
 pub fn run<T: ToSocketAddrs>(addr: T, router: Router, banner: Option<&str>) -> Result<()> {
-    let pool = threadfin::builder().size(8).build();
+    // If a range is supplied, the lower bound will be the core pool size while the upper bound will be a maximum pool size the pool is allowed to burst up to when the core threads are busy.
+    let pool = threadfin::builder().size(1..=128).build();
     let listener = TcpListener::bind(&addr)?;
     let addr = listener.local_addr()?;
     let server = Arc::new(Server::new(router));
