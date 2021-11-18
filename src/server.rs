@@ -30,7 +30,23 @@ pub fn run<T: ToSocketAddrs>(addr: T, router: Router, banner: Option<&str>) -> R
     } else {
         println!("~ vial running at http://{}", addr);
     }
-
+    #[cfg(feature = "tls")]
+    if let Some(cert_key) = crate::asset::tls_key() {
+        crate::asset::set_tls_config(
+            rustls::ServerConfig::builder()
+                .with_safe_defaults()
+                .with_no_client_auth()
+                .with_single_cert(
+                    vec![rustls::Certificate {
+                        0: cert_key.0.to_vec(),
+                    }],
+                    rustls::PrivateKey {
+                        0: cert_key.1.to_vec(),
+                    },
+                )
+                .unwrap(),
+        );
+    }
     for stream in listener.incoming() {
         let server = server.clone();
         let stream = stream?;
@@ -54,6 +70,27 @@ impl Server {
     }
 
     fn handle_request(&self, stream: &TcpStream) -> Result<()> {
+        #[cfg(feature = "tls")]
+        if let Some(config) = crate::asset::get_tls_config() {
+            println!("This request is TLS");
+            let stream = stream.try_clone()?;
+            drop(stream.set_read_timeout(Some(Duration::from_millis(1000))));
+            let tls_session = rustls::ServerConnection::new(config).unwrap();
+            let mut rustls_stream = rustls::StreamOwned::new(tls_session, stream);
+            let buf = vec![];
+            let mut req = Request::from_reader(&buf[..])?;
+            req.set_remote_addr(rustls_stream.sock.peer_addr()?.to_string());
+            let mut resp = vec![];
+            let method = req.method().to_string();
+            let path = req.path().to_string();
+            let (response, compression_opt) = self.build_response(req);
+            println!("{} {} {}", method, response.code(), path);
+            if response.code() == 500 {
+                eprintln!("{}", response.body());
+            }
+            response.write(&mut resp, &compression_opt)?;
+            rustls_stream.write_all(&resp)?
+        }
         let stream = stream.try_clone()?;
         // discard because: https://doc.rust-lang.org/std/net/struct.TcpStream.html#method.set_read_timeout
         // "An Err is returned if the zero Duration is passed to this method." thus no need to check result

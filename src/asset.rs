@@ -149,6 +149,31 @@ fn asset_dir() -> Option<&'static String> {
     unsafe { crate::ASSET_DIR.as_ref() }
 }
 
+/// Return the keys given in the `vial::ssl!` macro.
+#[cfg(feature = "tls")]
+pub fn tls_key() -> Option<(Vec<u8>, Vec<u8>)> {
+    unsafe { crate::CERTIFICATE_KEY.clone() }
+}
+/// Return the TLS config.
+#[cfg(feature = "tls")]
+pub fn get_tls_config() -> Option<std::sync::Arc<rustls::ServerConfig>> {
+    unsafe {
+        if let Some(tls) = &crate::TLS_CONFIG {
+            Some(tls.clone())
+        } else {
+            None
+        }
+    }
+}
+
+/// Set the TLS config.
+#[cfg(feature = "tls")]
+pub fn set_tls_config(cfg: rustls::ServerConfig) {
+    unsafe {
+        crate::TLS_CONFIG = Some(std::sync::Arc::new(cfg));
+    }
+}
+
 /// Does the asset exist on disk? `path` is the path relative to
 /// `ASSET_DIR` ex: `asset::exists("index.html`") checks for
 /// "./static/index.html" if `ASSET_DIR` is set to `static`.

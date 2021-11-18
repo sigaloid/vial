@@ -268,6 +268,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Directory where assets are stored, if any.
 pub static mut ASSET_DIR: Option<String> = None;
 
+/// Contains key and certificate, if tls feature is enabled.
+#[cfg(feature = "tls")]
+pub static mut CERTIFICATE_KEY: Option<(Vec<u8>, Vec<u8>)> = None;
+
+/// Contains server config, if tls feature is enabled.
+#[cfg(feature = "tls")]
+pub static mut TLS_CONFIG: Option<std::sync::Arc<rustls::ServerConfig>> = None;
+
 /// Assets bundled into the binary in release mode.
 pub static mut BUNDLED_ASSETS: Option<std::collections::HashMap<String, &'static [u8]>> = None;
 

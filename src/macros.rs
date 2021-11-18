@@ -235,6 +235,22 @@ macro_rules! asset_dir {
         }
     };
 }
+/// Vial can serve via TLS. Call this macro with a (&[u8], &[u8])
+/// containing your certificate and key.
+#[macro_export]
+#[cfg(feature = "tls")]
+macro_rules! ssl {
+    (@option $opt:expr) => {
+        if let Some(cert_key) = $opt {
+            ::vial::ssl!(cert_key);
+        }
+    };
+    ($cert_key:expr) => {
+        unsafe {
+            ::vial::CERTIFICATE_KEY = Some($cert_key.into());
+        }
+    };
+}
 
 /// If you want to bundle your assets into your final binary in
 /// release mode, then you need to call `vial::bundle_assets!()` with
