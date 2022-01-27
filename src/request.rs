@@ -1,6 +1,6 @@
 #[cfg(feature = "compression")]
 use fly_accept_encoding::Encoding;
-use std::net::TcpStream;
+use std::net::{TcpStream, SocketAddr, IpAddr, Ipv4Addr};
 use {
     crate::{http_parser, util, Error, Result, TypeCache},
     std::{borrow::Cow, collections::HashMap, fmt, io, rc::Rc, str},
@@ -41,7 +41,7 @@ impl Span {
 /// Contains information about a single request.
 pub struct Request {
     /// Remote address.
-    remote_addr: String,
+    remote_addr: SocketAddr,
 
     /// The raw request.
     buffer: Vec<u8>,
@@ -110,7 +110,7 @@ impl Request {
     #[must_use]
     pub fn default() -> Self {
         Self {
-            remote_addr: String::new(),
+            remote_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0),
             path: Span::new(),
             method: Span::new(),
             body: Span::new(),
@@ -177,13 +177,13 @@ impl Request {
     }
 
     /// Sets the remote address of the request.
-    pub fn set_remote_addr(&mut self, s: String) {
-        self.remote_addr = s;
+    pub fn set_remote_addr(&mut self, socket_addr: SocketAddr) {
+        self.remote_addr = socket_addr;
     }
 
     /// Remote address of the request.
     #[must_use]
-    pub fn remote_addr(&self) -> &str {
+    pub fn remote_addr(&self) -> &SocketAddr {
         &self.remote_addr
     }
 

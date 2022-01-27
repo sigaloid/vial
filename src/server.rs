@@ -59,7 +59,7 @@ impl Server {
         // "An Err is returned if the zero Duration is passed to this method." thus no need to check result
         drop(stream.set_read_timeout(Some(Duration::from_millis(1000))));
         let mut req = Request::from_stream(&stream)?;
-        req.set_remote_addr(stream.peer_addr()?.to_string());
+        req.set_remote_addr(stream.peer_addr()?);
         self.write_response(stream, req)
     }
 
